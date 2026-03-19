@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>YOLO OBB + OAK + Modbus Tester</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; background: #f5f7fb; color: #1f2937; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; box-shadow: 0 2px 4px rgba(0,0,0,.04); }
+    button { background: #2563eb; color: #fff; border: 0; border-radius: 8px; padding: 10px 16px; cursor: pointer; }
+    button:disabled { background: #9ca3af; cursor: wait; }
+    pre { background: #111827; color: #e5e7eb; padding: 12px; border-radius: 8px; overflow: auto; max-height: 300px; }
+    img { width: 100%; border-radius: 8px; border: 1px solid #ddd; }
+  </style>
+</head>
+<body>
+  <h1>YOLO OBB + OAK + Modbus Tester</h1>
+  <p>Use this page to monitor status and manually trigger capture/inference.</p>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Controls</h2>
+      <button id="triggerBtn">Trigger Capture + Inference</button>
+      <button id="refreshBtn">Refresh Status</button>
+      <h3>Service Status</h3>
+      <pre id="statusBox">Loading...</pre>
+      <h3>Latest Run</h3>
+      <pre id="runBox">No run yet.</pre>
+    </div>
+    <div class="card">
+      <h2>Latest Annotated Image</h2>
+      <img id="latestImg" alt="No image yet" />
+    </div>
+  </div>
+
+<script>
+const statusBox = document.getElementById('statusBox');
+const runBox = document.getElementById('runBox');
+const latestImg = document.getElementById('latestImg');
+const triggerBtn = document.getElementById('triggerBtn');
+const refreshBtn = document.getElementById('refreshBtn');
+
+async function refresh() {
+  const res = await fetch('/api/status');
+  const data = await res.json();
+  statusBox.textContent = JSON.stringify({
+    is_busy: data.is_busy,
+    ready: data.ready,
+    has_error: data.has_error,
+    heartbeat: data.heartbeat,
+  }, null, 2);
+  runBox.textContent = JSON.stringify(data.last_run || {}, null, 2);
+
+  if (data.last_run && data.last_run.annotated_image_path) {
+    latestImg.src = `/api/last-image?t=${Date.now()}`;
+  }
+}
+
+triggerBtn.onclick = async () => {
+  triggerBtn.disabled = true;
+  try {
+    const res = await fetch('/api/trigger', { method: 'POST' });
+    const data = await res.json();
+    runBox.textContent = JSON.stringify(data, null, 2);
+    latestImg.src = `/api/last-image?t=${Date.now()}`;
+  } catch (err) {
+    alert('Trigger failed: ' + err);
+  } finally {
+    triggerBtn.disabled = false;
+    refresh();
+  }
+};
+
+refreshBtn.onclick = refresh;
+setInterval(refresh, 2000);
+refresh();
+</script>
+</body>
+</html>

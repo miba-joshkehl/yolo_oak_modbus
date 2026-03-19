@@ -1,24 +1,30 @@
 {
-  "default_model": "medium",
-  "default_weights_path": "models/weights.pt",
-  "default_device": "auto",
-  "optimize_for_inference": true,
-  "annotation_output_dir": "outputs/annotated",
-
+  "model_path": "models/yolo11n-obb.pt",
+  "confidence_threshold": 0.4,
+  "image_size": 1024,
+  "max_detections": 5,
+  "capture_dir": "outputs/captures",
+  "annotated_dir": "outputs/annotated",
+  "use_oak_camera": true,
+  "oak_preview_width": 1280,
+  "oak_preview_height": 720,
   "modbus": {
     "enabled": true,
-    "host": "192.168.1.11",
-    "port": 502,
-    "unit_id": 255,
-    "address_base": "zero_based",
-    "byteorder": "BIG",
-    "wordorder": "BIG",
-
+    "host": "0.0.0.0",
+    "port": 1502,
+    "unit_id": 1,
+    "coils_size": 64,
+    "holding_size": 512,
+    "poll_interval_ms": 100,
     "map": {
-      "coil_alert": 128,
-      "u16_count": 300,
-      "u16_best_conf_x1000": 302,
-      "coil_capture": 129
+      "trigger_coil": 0,
+      "busy_coil": 1,
+      "ready_coil": 2,
+      "error_coil": 3,
+      "detection_count_reg": 0,
+      "max_detections_reg": 1,
+      "heartbeat_reg": 2,
+      "base_result_reg": 10
     }
   }
 }
